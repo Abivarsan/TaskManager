@@ -9,13 +9,13 @@
     @if (!User.Identity.IsAuthenticated)
     {
         <p>
-            <a asp-area="Identity" asp-page="/Account/Register" class="btn btn-primary">Get Started</a>
+            <a asp-area="Identity" asp-page="/Account/Register" class="btn btn-primary btn-lg">Get Started</a>
         </p>
     }
     else
     {
         <p>
-            <a asp-controller="UserTasks" asp-action="Index" class="btn btn-primary">View My Tasks</a>
+            <a asp-controller="UserTasks" asp-action="Index" class="btn btn-primary btn-lg">View My Tasks</a>
         </p>
     }
 </div>
