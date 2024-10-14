@@ -1,6 +1,8 @@
+// Controllers/HomeController.cs
 using Microsoft.AspNetCore.Mvc;
-using System.Diagnostics;
+using Microsoft.Extensions.Logging;
 using TaskManager.Models;
+using System.Diagnostics;
 
 namespace TaskManager.Controllers
 {
@@ -18,11 +20,7 @@ namespace TaskManager.Controllers
             return View();
         }
 
-        public IActionResult Privacy()
-        {
-            return View();
-        }
-
+        // Optional: Error handling action
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
         {

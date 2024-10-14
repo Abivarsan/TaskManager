@@ -1,4 +1,5 @@
-﻿@model TaskManager.Models.Task
+﻿<!-- Views/UserTasks/Delete.cshtml -->
+@model TaskManager.Models.UserTask
 
 @{
     ViewData["Title"] = "Delete Task";
@@ -7,9 +8,8 @@
 <h1>Delete Task</h1>
 
 <h3>Are you sure you want to delete this task?</h3>
-
 <div>
-    <h4>Task</h4>
+    <h4>UserTask</h4>
     <hr />
     <dl class="row">
         <dt class="col-sm-2">
@@ -26,9 +26,11 @@
         </dd>
     </dl>
 
-    <form asp-action="Delete">
-        <input type="hidden" asp-for="TaskId" />
-        <input type="submit" value="Delete" class="btn btn-danger" /> |
-        <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+    <form asp-action="DeleteConfirmed">
+        <input type="hidden" asp-for="UserTaskId" />
+        <div class="form-group mb-3">
+            <input type="submit" value="Delete" class="btn btn-danger" /> |
+            <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+        </div>
     </form>
 </div>

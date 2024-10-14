@@ -1,3 +1,4 @@
+// Models/ErrorViewModel.cs
 namespace TaskManager.Models
 {
     public class ErrorViewModel

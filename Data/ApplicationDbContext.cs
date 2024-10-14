@@ -12,8 +12,7 @@ namespace TaskManager.Data
         {
         }
 
-        // DbSet for Tasks
-        public DbSet<TaskManager.Models.Task> Tasks { get; set; }
+        public DbSet<UserTask> UserTasks { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {

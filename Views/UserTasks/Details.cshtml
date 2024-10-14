@@ -1,4 +1,5 @@
-﻿@model TaskManager.Models.Task
+﻿<!-- Views/UserTasks/Details.cshtml -->
+@model TaskManager.Models.UserTask
 
 @{
     ViewData["Title"] = "Task Details";
@@ -7,7 +8,7 @@
 <h1>Task Details</h1>
 
 <div>
-    <h4>Task</h4>
+    <h4>UserTask</h4>
     <hr />
     <dl class="row">
         <dt class="col-sm-2">
@@ -25,6 +26,6 @@
     </dl>
 </div>
 <div>
-    <a asp-action="Edit" asp-route-id="@Model.TaskId" class="btn btn-warning">Edit</a> |
+    <a asp-action="Edit" asp-route-id="@Model.UserTaskId" class="btn btn-warning">Edit</a>
     <a asp-action="Index" class="btn btn-secondary">Back to List</a>
 </div>

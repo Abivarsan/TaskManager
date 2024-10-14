@@ -1,8 +1,21 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+﻿<!-- Views/Home/Index.cshtml -->
+@{
+    ViewData["Title"] = "Home";
 }
 
 <div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+    <h1 class="display-4">Welcome to TaskManager!</h1>
+    <p class="lead">Manage your tasks efficiently and effectively.</p>
+    @if (!User.Identity.IsAuthenticated)
+    {
+        <p>
+            <a asp-area="Identity" asp-page="/Account/Register" class="btn btn-primary">Get Started</a>
+        </p>
+    }
+    else
+    {
+        <p>
+            <a asp-controller="UserTasks" asp-action="Index" class="btn btn-primary">View My Tasks</a>
+        </p>
+    }
 </div>

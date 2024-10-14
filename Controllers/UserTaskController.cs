@@ -1,36 +1,34 @@
-﻿// Controllers/TasksController.cs
+﻿// Controllers/UserTasksController.cs
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TaskManager.Data;
 using TaskManager.Models;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace TaskManager.Controllers
 {
     [Authorize]
-    public class TasksController : Controller
+    public class UserTasksController : Controller
     {
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
 
-        public TasksController(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
+        public UserTasksController(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
         {
             _context = context;
             _userManager = userManager;
         }
 
-        // GET: Tasks
+        // GET: UserTasks
         public async Task<IActionResult> Index()
         {
             var user = await _userManager.GetUserAsync(User);
-            var tasks = _context.Tasks.Where(t => t.UserId == user.Id);
-            return View(await tasks.ToListAsync());
+            var userTasks = _context.UserTasks.Where(t => t.UserId == user.Id);
+            return View(await userTasks.ToListAsync());
         }
 
-        // GET: Tasks/Details/5
+        // GET: UserTasks/Details/5
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -39,40 +37,39 @@ namespace TaskManager.Controllers
             }
 
             var user = await _userManager.GetUserAsync(User);
-            var task = await _context.Tasks
-                .FirstOrDefaultAsync(m => m.TaskId == id && m.UserId == user.Id);
-
-            if (task == null)
+            var userTask = await _context.UserTasks
+                .FirstOrDefaultAsync(m => m.UserTaskId == id && m.UserId == user.Id);
+            if (userTask == null)
             {
                 return NotFound();
             }
 
-            return View(task);
+            return View(userTask);
         }
 
-        // GET: Tasks/Create
+        // GET: UserTasks/Create
         public IActionResult Create()
         {
             return View();
         }
 
-        // POST: Tasks/Create
+        // POST: UserTasks/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Title,Description")] Task task)
+        public async Task<IActionResult> Create([Bind("Title,Description")] UserTask userTask)
         {
             if (ModelState.IsValid)
             {
                 var user = await _userManager.GetUserAsync(User);
-                task.UserId = user.Id;
-                _context.Add(task);
+                userTask.UserId = user.Id;
+                _context.Add(userTask);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            return View(task);
+            return View(userTask);
         }
 
-        // GET: Tasks/Edit/5
+        // GET: UserTasks/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -81,26 +78,26 @@ namespace TaskManager.Controllers
             }
 
             var user = await _userManager.GetUserAsync(User);
-            var task = await _context.Tasks.FirstOrDefaultAsync(t => t.TaskId == id && t.UserId == user.Id);
-            if (task == null)
+            var userTask = await _context.UserTasks.FirstOrDefaultAsync(t => t.UserTaskId == id && t.UserId == user.Id);
+            if (userTask == null)
             {
                 return NotFound();
             }
-            return View(task);
+            return View(userTask);
         }
 
-        // POST: Tasks/Edit/5
+        // POST: UserTasks/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("TaskId,Title,Description")] Task task)
+        public async Task<IActionResult> Edit(int id, [Bind("UserTaskId,Title,Description")] UserTask userTask)
         {
-            if (id != task.TaskId)
+            if (id != userTask.UserTaskId)
             {
                 return NotFound();
             }
 
             var user = await _userManager.GetUserAsync(User);
-            var existingTask = await _context.Tasks.AsNoTracking().FirstOrDefaultAsync(t => t.TaskId == id && t.UserId == user.Id);
+            var existingTask = await _context.UserTasks.AsNoTracking().FirstOrDefaultAsync(t => t.UserTaskId == id && t.UserId == user.Id);
             if (existingTask == null)
             {
                 return NotFound();
@@ -110,13 +107,13 @@ namespace TaskManager.Controllers
             {
                 try
                 {
-                    task.UserId = user.Id;
-                    _context.Update(task);
+                    userTask.UserId = user.Id;
+                    _context.Update(userTask);
                     await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!TaskExists(task.TaskId, user.Id))
+                    if (!UserTaskExists(userTask.UserTaskId, user.Id))
                     {
                         return NotFound();
                     }
@@ -127,10 +124,10 @@ namespace TaskManager.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            return View(task);
+            return View(userTask);
         }
 
-        // GET: Tasks/Delete/5
+        // GET: UserTasks/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -139,34 +136,34 @@ namespace TaskManager.Controllers
             }
 
             var user = await _userManager.GetUserAsync(User);
-            var task = await _context.Tasks
-                .FirstOrDefaultAsync(m => m.TaskId == id && m.UserId == user.Id);
-            if (task == null)
+            var userTask = await _context.UserTasks
+                .FirstOrDefaultAsync(m => m.UserTaskId == id && m.UserId == user.Id);
+            if (userTask == null)
             {
                 return NotFound();
             }
 
-            return View(task);
+            return View(userTask);
         }
 
-        // POST: Tasks/Delete/5
+        // POST: UserTasks/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var user = await _userManager.GetUserAsync(User);
-            var task = await _context.Tasks.FirstOrDefaultAsync(t => t.TaskId == id && t.UserId == user.Id);
-            if (task != null)
+            var userTask = await _context.UserTasks.FirstOrDefaultAsync(t => t.UserTaskId == id && t.UserId == user.Id);
+            if (userTask != null)
             {
-                _context.Tasks.Remove(task);
+                _context.UserTasks.Remove(userTask);
                 await _context.SaveChangesAsync();
             }
             return RedirectToAction(nameof(Index));
         }
 
-        private bool TaskExists(int id, string userId)
+        private bool UserTaskExists(int id, string userId)
         {
-            return _context.Tasks.Any(e => e.TaskId == id && e.UserId == userId);
+            return _context.UserTasks.Any(e => e.UserTaskId == id && e.UserId == userId);
         }
     }
 }

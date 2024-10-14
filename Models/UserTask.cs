@@ -1,13 +1,13 @@
-﻿// Models/Task.cs
+﻿// Models/UserTask.cs
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace TaskManager.Models
 {
-    public class Task
+    public class UserTask
     {
         [Key]
-        public int TaskId { get; set; }
+        public int UserTaskId { get; set; }
 
         [Required(ErrorMessage = "Title is required")]
         [StringLength(100, ErrorMessage = "Title cannot exceed 100 characters")]
@@ -20,7 +20,6 @@ namespace TaskManager.Models
         [ForeignKey("ApplicationUser")]
         public string UserId { get; set; }
 
-        // Navigation property
         public ApplicationUser ApplicationUser { get; set; }
     }
 }
