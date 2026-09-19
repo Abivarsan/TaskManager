@@ -1,21 +1,140 @@
-﻿<!-- Views/Home/Index.cshtml -->
 @{
-    ViewData["Title"] = "Home";
+    ViewData["Title"] = "Modern Task Management";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome to TaskManager!</h1>
-    <p class="lead">Manage your tasks efficiently and effectively.</p>
-    @if (!User.Identity.IsAuthenticated)
-    {
-        <p>
-            <a asp-area="Identity" asp-page="/Account/Register" class="btn btn-primary btn-lg">Get Started</a>
-        </p>
-    }
-    else
-    {
-        <p>
-            <a asp-controller="UserTasks" asp-action="Index" class="btn btn-primary btn-lg">View My Tasks</a>
-        </p>
-    }
-</div>
+<!-- Hero Section -->
+<section class="hero-section">
+    <!-- Floating Badge -->
+    <div class="hero-pill">
+        <i class="bi bi-stars"></i> Next-Gen Productivity
+    </div>
+
+    <!-- Main Headline -->
+    <h1 class="hero-title">
+        Organize Everything, <br />
+        <span class="hero-title-gradient">Achieve Anything.</span>
+    </h1>
+
+    <!-- Subtitle -->
+    <p class="hero-subtitle">
+        Elevate your daily workflow with an intuitive, glassmorphic task workspace designed for maximum speed, clarity, and focus.
+    </p>
+
+    <!-- CTAs -->
+    <div class="d-flex flex-wrap justify-content-center gap-3">
+        @if (User.Identity?.IsAuthenticated == true)
+        {
+            <a asp-controller="UserTasks" asp-action="Index" class="btn btn-gradient-primary btn-lg btn-shimmer">
+                <i class="bi bi-kanban"></i> Open Task Board
+            </a>
+            <a asp-controller="UserTasks" asp-action="Create" class="btn btn-modern-secondary btn-lg">
+                <i class="bi bi-plus-circle"></i> Create New Task
+            </a>
+        }
+        else
+        {
+            <a asp-area="Identity" asp-page="/Account/Register" class="btn btn-gradient-primary btn-lg btn-shimmer">
+                <i class="bi bi-rocket-takeoff"></i> Get Started Free
+            </a>
+            <a asp-area="Identity" asp-page="/Account/Login" class="btn btn-modern-secondary btn-lg">
+                <i class="bi bi-box-arrow-in-right"></i> Sign In
+            </a>
+        }
+    </div>
+
+    <!-- Interactive Mockup Showcase -->
+    <div class="hero-mockup-wrapper">
+        <div class="hero-mockup-card">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div class="mockup-header-dots">
+                    <span class="mockup-dot red"></span>
+                    <span class="mockup-dot yellow"></span>
+                    <span class="mockup-dot green"></span>
+                </div>
+                <div class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1 rounded-pill small">
+                    <i class="bi bi-lightning-charge-fill"></i> Live Preview
+                </div>
+            </div>
+
+            <!-- Mock Task Items -->
+            <div class="mockup-item">
+                <div class="d-flex align-items-center gap-3">
+                    <span class="text-success fs-5"><i class="bi bi-check-circle-fill"></i></span>
+                    <div>
+                        <div class="fw-semibold">Deploy new ASP.NET Core UI Architecture</div>
+                        <div class="small text-muted">Finished responsive layout and custom theming</div>
+                    </div>
+                </div>
+                <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill">Done</span>
+            </div>
+
+            <div class="mockup-item">
+                <div class="d-flex align-items-center gap-3">
+                    <span class="text-primary fs-5"><i class="bi bi-clock-history"></i></span>
+                    <div>
+                        <div class="fw-semibold">Design Glassmorphic Task Dashboard</div>
+                        <div class="small text-muted">Incorporate real-time search & interactive card grid</div>
+                    </div>
+                </div>
+                <span class="badge bg-info-subtle text-info border border-info-subtle rounded-pill">In Progress</span>
+            </div>
+
+            <div class="mockup-item">
+                <div class="d-flex align-items-center gap-3">
+                    <span class="text-warning fs-5"><i class="bi bi-circle"></i></span>
+                    <div>
+                        <div class="fw-semibold">Review Quarterly Milestone Targets</div>
+                        <div class="small text-muted">Prepare summary deck for team retrospective</div>
+                    </div>
+                </div>
+                <span class="badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill">Upcoming</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Grid -->
+<section class="py-5">
+    <div class="text-center mb-5">
+        <h2 class="fw-bold fs-2">Built for Performance and Simplicity</h2>
+        <p class="text-muted">Everything you need to keep your goals and tasks in pristine sync.</p>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="feature-card">
+                <div class="feature-icon-wrapper">
+                    <i class="bi bi-lightning-charge"></i>
+                </div>
+                <h3 class="feature-title">Instant Organization</h3>
+                <p class="feature-desc">
+                    Quickly create, organize, and prioritize your daily items. Search through all your tasks in milliseconds with instant client filtering.
+                </p>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="feature-card">
+                <div class="feature-icon-wrapper">
+                    <i class="bi bi-palette"></i>
+                </div>
+                <h3 class="feature-title">Fluid Glassmorphism</h3>
+                <p class="feature-desc">
+                    Crafted with frosted glass layers, dynamic dark/light themes, and smooth cubic-bezier transitions for an inspiring aesthetic.
+                </p>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="feature-card">
+                <div class="feature-icon-wrapper">
+                    <i class="bi bi-shield-lock"></i>
+                </div>
+                <h3 class="feature-title">Secure & Cloud-Ready</h3>
+                <p class="feature-desc">
+                    Powered by ASP.NET Core Identity and Entity Framework Core with SQL Server, ensuring your tasks are safe, private, and always available.
+                </p>
+            </div>
+        </div>
+    </div>
+</section>

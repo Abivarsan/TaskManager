@@ -1,49 +1,726 @@
-﻿<!-- Views/UserTasks/Index.cshtml -->
 @model IEnumerable<TaskManager.Models.UserTask>
 
 @{
-    ViewData["Title"] = "My Tasks";
+    ViewData["Title"] = "Task Dashboard";
+    var taskList = Model?.ToList() ?? new List<TaskManager.Models.UserTask>();
+    var totalTasks = (int)(ViewBag.TotalTasks ?? 0);
+    var completedTasks = (int)(ViewBag.CompletedTasks ?? 0);
+    var inProgressTasks = (int)(ViewBag.InProgressTasks ?? 0);
+    var todoTasks = (int)(ViewBag.TodoTasks ?? 0);
+    var overdueTasks = (int)(ViewBag.OverdueTasks ?? 0);
+    var completionRate = (int)(ViewBag.CompletionRate ?? 0);
+    var selectedCat = (string?)ViewBag.SelectedCategory;
+    var selectedPrio = (string?)ViewBag.SelectedPriority;
+    var selectedStat = (string?)ViewBag.SelectedStatus;
 }
 
-<h1>My Tasks</h1>
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show rounded-3 mb-4 animate-fade-in-up" role="alert">
+        <i class="bi bi-check-circle-fill me-2 text-success"></i> @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
 
-<div class="mb-3">
-    <a asp-action="Create" class="btn btn-primary">Create New Task</a>
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show rounded-3 mb-4 animate-fade-in-up" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2 text-danger"></i> @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<!-- Dashboard Top Header -->
+<div class="d-flex flex-column flex-xl-row justify-content-between align-items-xl-center gap-3 mb-4 animate-fade-in-up">
+    <div>
+        <div class="d-flex align-items-center gap-2">
+            <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3 py-1">
+                <i class="bi bi-kanban-fill"></i> Modern Workspace
+            </span>
+            @if (overdueTasks > 0)
+            {
+                <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-2.5 py-1">
+                    <i class="bi bi-fire"></i> @overdueTasks Overdue
+                </span>
+            }
+        </div>
+        <h1 class="fw-bold mt-2 mb-0" style="letter-spacing: -0.02em;">Task Dashboard</h1>
+        <p class="text-muted mb-0">Track, prioritize, and execute your work with intelligent tools.</p>
+    </div>
+
+    <!-- Quick Action Bar -->
+    <div class="d-flex flex-wrap align-items-center gap-2">
+        <!-- Email Digest Button (Gmail SMTP Automation) -->
+        <form asp-action="SendTaskSummaryEmail" method="post" class="d-inline">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="btn btn-modern-secondary" title="Email task summary & upcoming deadlines to your inbox">
+                <i class="bi bi-envelope-arrow-up text-primary"></i> Email Digest
+            </button>
+        </form>
+
+        <!-- Export Dropdown -->
+        <div class="dropdown">
+            <button class="btn btn-modern-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="bi bi-download"></i> Export
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0" style="background: var(--bg-surface-elevated); border: 1px solid var(--border-color) !important;">
+                <li>
+                    <a class="dropdown-item py-2" asp-action="ExportCsv">
+                        <i class="bi bi-file-earmark-spreadsheet me-2 text-success"></i> Export as CSV
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item py-2" asp-action="PrintReport" target="_blank">
+                        <i class="bi bi-printer me-2 text-info"></i> Print / Save as PDF
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Create Task CTA -->
+        <a asp-action="Create" class="btn btn-gradient-primary btn-shimmer">
+            <i class="bi bi-plus-circle-fill"></i> New Task
+        </a>
+    </div>
 </div>
 
-@if (!Model.Any())
+<!-- Visual Analytics & Productivity Insights Bar -->
+<div class="row g-3 mb-4 animate-fade-in-up">
+    <!-- Total Tasks -->
+    <div class="col-6 col-md-3">
+        <div class="stats-card">
+            <div class="stats-icon-box stats-icon-primary">
+                <i class="bi bi-clipboard2-check"></i>
+            </div>
+            <div>
+                <div class="stats-val">@totalTasks</div>
+                <div class="stats-lbl">Total Tasks</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Completed Tasks & Progress -->
+    <div class="col-6 col-md-3">
+        <div class="stats-card">
+            <div class="stats-icon-box stats-icon-success">
+                <i class="bi bi-check2-circle"></i>
+            </div>
+            <div class="w-100">
+                <div class="d-flex justify-content-between align-items-baseline">
+                    <span class="stats-val">@completedTasks</span>
+                    <span class="small fw-bold text-success">@completionRate%</span>
+                </div>
+                <div class="stats-lbl mb-1">Completed</div>
+                <div class="progress" style="height: 5px; background: var(--bg-surface-hover);">
+                    <div class="progress-bar bg-success" role="progressbar" style="width: @completionRate%;" aria-valuenow="@completionRate" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- In Progress -->
+    <div class="col-6 col-md-3">
+        <div class="stats-card">
+            <div class="stats-icon-box" style="background: rgba(14, 165, 233, 0.12); color: var(--info);">
+                <i class="bi bi-hourglass-split"></i>
+            </div>
+            <div>
+                <div class="stats-val">@inProgressTasks</div>
+                <div class="stats-lbl">In Progress</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Overdue Alert -->
+    <div class="col-6 col-md-3">
+        <div class="stats-card @(overdueTasks > 0 ? "border-danger" : "")">
+            <div class="stats-icon-box" style="background: @(overdueTasks > 0 ? "rgba(244, 63, 94, 0.15)" : "var(--bg-surface-hover)"); color: @(overdueTasks > 0 ? "var(--danger)" : "var(--text-muted)");">
+                <i class="bi bi-exclamation-octagon@(overdueTasks > 0 ? "-fill" : "")"></i>
+            </div>
+            <div>
+                <div class="stats-val @(overdueTasks > 0 ? "text-danger" : "")">@overdueTasks</div>
+                <div class="stats-lbl">Overdue</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Search, Filters & View Toggle Bar -->
+<div class="glass-card p-3 mb-4 animate-fade-in-up">
+    <div class="row g-3 align-items-center">
+        <!-- Live Search -->
+        <div class="col-12 col-md-4">
+            <div class="search-wrapper w-100">
+                <i class="bi bi-search search-icon"></i>
+                <input type="search" id="taskSearchInput" class="form-control search-input"
+                       placeholder="Filter tasks instantly..." aria-label="Search tasks" />
+            </div>
+        </div>
+
+        <!-- Priority & Status Filters -->
+        <div class="col-12 col-md-5">
+            <div class="d-flex gap-2">
+                <select id="priorityFilterSelect" class="form-select form-control-modern py-2 small">
+                    <option value="">All Priorities</option>
+                    <option value="Urgent">Urgent</option>
+                    <option value="High">High</option>
+                    <option value="Medium">Medium</option>
+                    <option value="Low">Low</option>
+                </select>
+
+                <select id="statusFilterSelect" class="form-select form-control-modern py-2 small">
+                    <option value="">All Statuses</option>
+                    <option value="Todo">To Do</option>
+                    <option value="InProgress">In Progress</option>
+                    <option value="Completed">Completed</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- View Switcher (Grid / Table / Kanban) -->
+        <div class="col-12 col-md-3 text-md-end">
+            <div class="btn-group" role="group" aria-label="View toggle">
+                <button type="button" class="btn btn-modern-secondary btn-sm active" id="btnViewGrid" title="Card Grid View">
+                    <i class="bi bi-grid-fill"></i> Grid
+                </button>
+                <button type="button" class="btn btn-modern-secondary btn-sm" id="btnViewTable" title="Table List View">
+                    <i class="bi bi-list-ul"></i> Table
+                </button>
+                <button type="button" class="btn btn-modern-secondary btn-sm" id="btnViewKanban" title="Kanban Board View">
+                    <i class="bi bi-kanban"></i> Board
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Category Filter Pills -->
+    <div class="filter-pills-wrapper mt-3 pt-3 border-top" style="border-color: var(--border-color) !important;">
+        <span class="text-muted small me-1"><i class="bi bi-tags"></i> Categories:</span>
+        <button type="button" class="filter-pill active" data-category="">All</button>
+        <button type="button" class="filter-pill" data-category="Work"><i class="bi bi-briefcase"></i> Work</button>
+        <button type="button" class="filter-pill" data-category="Personal"><i class="bi bi-person"></i> Personal</button>
+        <button type="button" class="filter-pill" data-category="Study"><i class="bi bi-book"></i> Study</button>
+        <button type="button" class="filter-pill" data-category="Finance"><i class="bi bi-cash-coin"></i> Finance</button>
+        <button type="button" class="filter-pill" data-category="Health"><i class="bi bi-heart-pulse"></i> Health</button>
+        <button type="button" class="filter-pill" data-category="General"><i class="bi bi-hash"></i> General</button>
+    </div>
+</div>
+
+<!-- No Search Matches Alert -->
+<div id="noSearchMatchAlert" class="alert alert-warning d-none text-center py-4 rounded-3 border-warning animate-fade-in-up">
+    <i class="bi bi-search fs-4 d-block mb-2 text-warning"></i>
+    <h5 class="fw-bold mb-1">No matching tasks found</h5>
+    <p class="text-muted small mb-0">Try different search keywords or adjust your active filters.</p>
+</div>
+
+@if (!taskList.Any())
 {
-    <div class="alert alert-info">
-        You have no tasks. Start by creating one!
+    <!-- Empty State -->
+    <div class="empty-state-box animate-fade-in-up">
+        <div class="empty-state-icon">
+            <i class="bi bi-clipboard-check"></i>
+        </div>
+        <h3 class="fw-bold mb-2">No tasks created yet</h3>
+        <p class="text-muted mb-4" style="max-width: 480px; margin-left: auto; margin-right: auto;">
+            Your workspace is ready! Take control of your day by adding your very first task right now.
+        </p>
+        <a asp-action="Create" class="btn btn-gradient-primary btn-shimmer">
+            <i class="bi bi-plus-lg"></i> Add Your First Task
+        </a>
     </div>
 }
 else
 {
-    <div class="table-responsive">
-        <table class="table table-striped table-hover align-middle">
-            <thead class="table-dark">
-                <tr>
-                    <th scope="col">Title</th>
-                    <th scope="col">Description</th>
-                    <th scope="col" style="width: 25%;">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var item in Model)
-                {
-                    <tr>
-                        <td>@Html.DisplayFor(modelItem => item.Title)</td>
-                        <td>@Html.DisplayFor(modelItem => item.Description)</td>
-                        <td>
-                            <div class="d-flex">
-                                <a asp-action="Edit" asp-route-id="@item.UserTaskId" class="btn btn-sm btn-warning me-2">Edit</a>
-                                <a asp-action="Details" asp-route-id="@item.UserTaskId" class="btn btn-sm btn-info me-2">Details</a>
-                                <a asp-action="Delete" asp-route-id="@item.UserTaskId" class="btn btn-sm btn-danger">Delete</a>
-                            </div>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+    <!-- 1. GRID VIEW -->
+    <div id="taskGridContainer" class="row g-4 animate-fade-in-up">
+        @for (int i = 0; i < taskList.Count; i++)
+        {
+            var item = taskList[i];
+            var isOverdue = item.DueDate.HasValue && item.DueDate.Value.Date < DateTime.Today && item.Status != TaskManager.Models.TaskStatus.Completed;
+            var isDueToday = item.DueDate.HasValue && item.DueDate.Value.Date == DateTime.Today && item.Status != TaskManager.Models.TaskStatus.Completed;
+            var isDone = item.Status == TaskManager.Models.TaskStatus.Completed;
+            var totalSubs = item.SubTasks?.Count ?? 0;
+            var doneSubs = item.SubTasks?.Count(s => s.IsCompleted) ?? 0;
+
+            <div class="col-md-6 col-lg-4 task-item-card"
+                 data-task-id="@item.UserTaskId"
+                 data-task-title="@item.Title.ToLower()"
+                 data-task-desc="@(item.Description?.ToLower() ?? "")"
+                 data-task-priority="@item.Priority.ToString()"
+                 data-task-category="@item.Category.ToString()"
+                 data-task-status="@item.Status.ToString()">
+                
+                <div class="task-grid-card @(isDone ? "opacity-75" : "")">
+                    <!-- Card Top Meta -->
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div class="d-flex align-items-center gap-2">
+                            <!-- 1-Click Status Toggle -->
+                            <input type="checkbox" class="task-status-checkbox"
+                                   data-task-id="@item.UserTaskId"
+                                   @(isDone ? "checked" : "")
+                                   title="Toggle Completed" />
+                            
+                            <!-- Priority Badge -->
+                            <span class="badge-prio badge-prio-@item.Priority.ToString().ToLower()">
+                                @if (item.Priority == TaskManager.Models.TaskPriority.Urgent)
+                                {
+                                    <i class="bi bi-fire"></i>
+                                }
+                                @item.Priority
+                            </span>
+                        </div>
+
+                        <!-- Category Badge -->
+                        <span class="badge-cat badge-cat-@item.Category.ToString().ToLower()">
+                            @item.Category
+                        </span>
+                    </div>
+
+                    <!-- Title -->
+                    <h3 class="task-card-title @(isDone ? "text-decoration-line-through text-muted" : "")" title="@item.Title">
+                        @item.Title
+                    </h3>
+
+                    <!-- Description -->
+                    <p class="task-card-desc">
+                        @(string.IsNullOrWhiteSpace(item.Description) ? "No description provided." : item.Description)
+                    </p>
+
+                    <!-- Subtask Pill & Due Date Row -->
+                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                        @if (totalSubs > 0)
+                        {
+                            <span class="badge bg-secondary-subtle text-muted rounded-pill px-2.5 py-1 small" title="Checklist progress">
+                                <i class="bi bi-check2-square text-primary me-1"></i> @doneSubs/@totalSubs steps
+                            </span>
+                        }
+                        else
+                        {
+                            <span></span>
+                        }
+
+                        @if (item.DueDate.HasValue)
+                        {
+                            <span class="badge-date @(isOverdue ? "badge-date-overdue" : (isDueToday ? "badge-date-today" : "badge-date-normal"))">
+                                <i class="bi bi-calendar3"></i>
+                                @if (isOverdue)
+                                {
+                                    <span>Overdue (@item.DueDate.Value.ToString("MMM dd"))</span>
+                                }
+                                else if (isDueToday)
+                                {
+                                    <span>Due Today</span>
+                                }
+                                else
+                                {
+                                    <span>@item.DueDate.Value.ToString("MMM dd, yyyy")</span>
+                                }
+                            </span>
+                        }
+                    </div>
+
+                    <!-- Card Footer Actions -->
+                    <div class="task-card-footer mt-auto">
+                        <span class="small text-muted">
+                            <i class="bi bi-clock-history"></i> @item.CreatedAt.ToString("MMM dd")
+                        </span>
+                        <div class="d-flex gap-2">
+                            <a asp-action="Details" asp-route-id="@item.UserTaskId" class="btn-action-icon view-icon" title="View details">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            <a asp-action="Edit" asp-route-id="@item.UserTaskId" class="btn-action-icon edit-icon" title="Edit task">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <a asp-action="Delete" asp-route-id="@item.UserTaskId" class="btn-action-icon delete-icon" title="Delete task">
+                                <i class="bi bi-trash3"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
     </div>
+
+    <!-- 2. TABLE VIEW -->
+    <div id="taskTableContainer" class="modern-table-container d-none animate-fade-in-up">
+        <div class="table-responsive">
+            <table class="table table-modern align-middle">
+                <thead>
+                    <tr>
+                        <th style="width: 45px;"></th>
+                        <th>Task</th>
+                        <th>Status</th>
+                        <th>Priority</th>
+                        <th>Category</th>
+                        <th>Due Date</th>
+                        <th>Checklist</th>
+                        <th class="text-end" style="width: 140px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in taskList)
+                    {
+                        var isDone = item.Status == TaskManager.Models.TaskStatus.Completed;
+                        var isOverdue = item.DueDate.HasValue && item.DueDate.Value.Date < DateTime.Today && !isDone;
+                        var totalSubs = item.SubTasks?.Count ?? 0;
+                        var doneSubs = item.SubTasks?.Count(s => s.IsCompleted) ?? 0;
+
+                        <tr class="task-item-row"
+                            data-task-id="@item.UserTaskId"
+                            data-task-title="@item.Title.ToLower()"
+                            data-task-desc="@(item.Description?.ToLower() ?? "")"
+                            data-task-priority="@item.Priority.ToString()"
+                            data-task-category="@item.Category.ToString()"
+                            data-task-status="@item.Status.ToString()">
+                            <td>
+                                <input type="checkbox" class="task-status-checkbox"
+                                       data-task-id="@item.UserTaskId"
+                                       @(isDone ? "checked" : "")
+                                       title="Toggle status" />
+                            </td>
+                            <td>
+                                <div class="fw-semibold @(isDone ? "text-decoration-line-through text-muted" : "")">@item.Title</div>
+                                @if (!string.IsNullOrWhiteSpace(item.Description))
+                                {
+                                    <div class="small text-muted text-truncate" style="max-width: 260px;">@item.Description</div>
+                                }
+                            </td>
+                            <td>
+                                <span class="badge @(isDone ? "bg-success-subtle text-success" : (item.Status == TaskManager.Models.TaskStatus.InProgress ? "bg-info-subtle text-info" : "bg-secondary-subtle text-muted")) rounded-pill px-2.5 py-1 small">
+                                    @item.Status
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge-prio badge-prio-@item.Priority.ToString().ToLower()">
+                                    @item.Priority
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge-cat badge-cat-@item.Category.ToString().ToLower()">
+                                    @item.Category
+                                </span>
+                            </td>
+                            <td>
+                                @if (item.DueDate.HasValue)
+                                {
+                                    <span class="small @(isOverdue ? "text-danger fw-bold" : "text-muted")">
+                                        @item.DueDate.Value.ToString("MMM dd, yyyy")
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted small">—</span>
+                                }
+                            </td>
+                            <td>
+                                @if (totalSubs > 0)
+                                {
+                                    <span class="small text-muted">@doneSubs / @totalSubs</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted small">—</span>
+                                }
+                            </td>
+                            <td class="text-end">
+                                <div class="d-inline-flex gap-2">
+                                    <a asp-action="Details" asp-route-id="@item.UserTaskId" class="btn-action-icon view-icon" title="View">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a asp-action="Edit" asp-route-id="@item.UserTaskId" class="btn-action-icon edit-icon" title="Edit">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a asp-action="Delete" asp-route-id="@item.UserTaskId" class="btn-action-icon delete-icon" title="Delete">
+                                        <i class="bi bi-trash3"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 3. KANBAN BOARD VIEW -->
+    <div id="taskKanbanContainer" class="kanban-board d-none animate-fade-in-up">
+        <!-- Column 1: TO DO -->
+        <div class="kanban-column" data-status="Todo">
+            <div class="kanban-column-header">
+                <span class="d-flex align-items-center gap-2">
+                    <i class="bi bi-circle text-secondary"></i> To Do
+                </span>
+                <span class="badge bg-secondary-subtle text-muted rounded-pill px-2.5" id="count-Todo">
+                    @taskList.Count(t => t.Status == TaskManager.Models.TaskStatus.Todo)
+                </span>
+            </div>
+            <div class="kanban-column-body" id="col-Todo" data-status-val="0">
+                @foreach (var item in taskList.Where(t => t.Status == TaskManager.Models.TaskStatus.Todo))
+                {
+                    <div class="kanban-card" draggable="true" data-task-id="@item.UserTaskId"
+                         data-task-title="@item.Title.ToLower()"
+                         data-task-desc="@(item.Description?.ToLower() ?? "")"
+                         data-task-priority="@item.Priority.ToString()"
+                         data-task-category="@item.Category.ToString()">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="badge-prio badge-prio-@item.Priority.ToString().ToLower()">@item.Priority</span>
+                            <span class="badge-cat badge-cat-@item.Category.ToString().ToLower()">@item.Category</span>
+                        </div>
+                        <div class="kanban-card-title">@item.Title</div>
+                        <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top" style="border-color: var(--border-color) !important;">
+                            <span class="small text-muted">
+                                @(item.DueDate.HasValue ? item.DueDate.Value.ToString("MMM dd") : "")
+                            </span>
+                            <button class="btn btn-sm btn-modern-secondary py-0 px-2 btn-move-status" data-task-id="@item.UserTaskId" data-target-status="1" title="Move to In Progress">
+                                Next <i class="bi bi-arrow-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Column 2: IN PROGRESS -->
+        <div class="kanban-column" data-status="InProgress">
+            <div class="kanban-column-header">
+                <span class="d-flex align-items-center gap-2">
+                    <i class="bi bi-hourglass-split text-info"></i> In Progress
+                </span>
+                <span class="badge bg-info-subtle text-info rounded-pill px-2.5" id="count-InProgress">
+                    @taskList.Count(t => t.Status == TaskManager.Models.TaskStatus.InProgress)
+                </span>
+            </div>
+            <div class="kanban-column-body" id="col-InProgress" data-status-val="1">
+                @foreach (var item in taskList.Where(t => t.Status == TaskManager.Models.TaskStatus.InProgress))
+                {
+                    <div class="kanban-card" draggable="true" data-task-id="@item.UserTaskId"
+                         data-task-title="@item.Title.ToLower()"
+                         data-task-desc="@(item.Description?.ToLower() ?? "")"
+                         data-task-priority="@item.Priority.ToString()"
+                         data-task-category="@item.Category.ToString()">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="badge-prio badge-prio-@item.Priority.ToString().ToLower()">@item.Priority</span>
+                            <span class="badge-cat badge-cat-@item.Category.ToString().ToLower()">@item.Category</span>
+                        </div>
+                        <div class="kanban-card-title">@item.Title</div>
+                        <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top" style="border-color: var(--border-color) !important;">
+                            <button class="btn btn-sm btn-modern-secondary py-0 px-2 btn-move-status" data-task-id="@item.UserTaskId" data-target-status="0" title="Move back to To Do">
+                                <i class="bi bi-arrow-left"></i>
+                            </button>
+                            <button class="btn btn-sm btn-gradient-primary py-0 px-2 btn-move-status" data-task-id="@item.UserTaskId" data-target-status="2" title="Mark Done">
+                                Done <i class="bi bi-check2"></i>
+                            </button>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Column 3: COMPLETED -->
+        <div class="kanban-column" data-status="Completed">
+            <div class="kanban-column-header">
+                <span class="d-flex align-items-center gap-2">
+                    <i class="bi bi-check2-all text-success"></i> Completed
+                </span>
+                <span class="badge bg-success-subtle text-success rounded-pill px-2.5" id="count-Completed">
+                    @taskList.Count(t => t.Status == TaskManager.Models.TaskStatus.Completed)
+                </span>
+            </div>
+            <div class="kanban-column-body" id="col-Completed" data-status-val="2">
+                @foreach (var item in taskList.Where(t => t.Status == TaskManager.Models.TaskStatus.Completed))
+                {
+                    <div class="kanban-card is-completed" draggable="true" data-task-id="@item.UserTaskId"
+                         data-task-title="@item.Title.ToLower()"
+                         data-task-desc="@(item.Description?.ToLower() ?? "")"
+                         data-task-priority="@item.Priority.ToString()"
+                         data-task-category="@item.Category.ToString()">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="badge-prio badge-prio-@item.Priority.ToString().ToLower()">@item.Priority</span>
+                            <span class="badge-cat badge-cat-@item.Category.ToString().ToLower()">@item.Category</span>
+                        </div>
+                        <div class="kanban-card-title">@item.Title</div>
+                        <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top" style="border-color: var(--border-color) !important;">
+                            <span class="small text-muted"><i class="bi bi-check-circle-fill text-success"></i> Finished</span>
+                            <button class="btn btn-sm btn-modern-secondary py-0 px-2 btn-move-status" data-task-id="@item.UserTaskId" data-target-status="1" title="Reopen to In Progress">
+                                <i class="bi bi-arrow-counterclockwise"></i> Reopen
+                            </button>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // 1. View Mode Toggling (Grid, Table, Kanban)
+    const btnGrid = document.getElementById('btnViewGrid');
+    const btnTable = document.getElementById('btnViewTable');
+    const btnKanban = document.getElementById('btnViewKanban');
+    const gridContainer = document.getElementById('taskGridContainer');
+    const tableContainer = document.getElementById('taskTableContainer');
+    const kanbanContainer = document.getElementById('taskKanbanContainer');
+
+    function setActiveView(view) {
+        if (!gridContainer || !tableContainer || !kanbanContainer) return;
+        
+        btnGrid.classList.toggle('active', view === 'grid');
+        btnTable.classList.toggle('active', view === 'table');
+        btnKanban.classList.toggle('active', view === 'kanban');
+
+        gridContainer.classList.toggle('d-none', view !== 'grid');
+        tableContainer.classList.toggle('d-none', view !== 'table');
+        kanbanContainer.classList.toggle('d-none', view !== 'kanban');
+        localStorage.setItem('taskManagerViewPreference', view);
+    }
+
+    if (btnGrid) btnGrid.addEventListener('click', () => setActiveView('grid'));
+    if (btnTable) btnTable.addEventListener('click', () => setActiveView('table'));
+    if (btnKanban) btnKanban.addEventListener('click', () => setActiveView('kanban'));
+
+    const savedView = localStorage.getItem('taskManagerViewPreference');
+    if (savedView) setActiveView(savedView);
+
+    // 2. Client-side Live Filtering (Search, Category, Priority, Status)
+    const searchInput = document.getElementById('taskSearchInput');
+    const prioritySelect = document.getElementById('priorityFilterSelect');
+    const statusSelect = document.getElementById('statusFilterSelect');
+    const categoryPills = document.querySelectorAll('.filter-pill');
+    let activeCategory = '';
+
+    categoryPills.forEach(pill => {
+        pill.addEventListener('click', function () {
+            categoryPills.forEach(p => p.classList.remove('active'));
+            this.classList.add('active');
+            activeCategory = this.getAttribute('data-category') || '';
+            applyFilters();
+        });
+    });
+
+    if (searchInput) searchInput.addEventListener('input', applyFilters);
+    if (prioritySelect) prioritySelect.addEventListener('change', applyFilters);
+    if (statusSelect) statusSelect.addEventListener('change', applyFilters);
+
+    function applyFilters() {
+        const query = (searchInput ? searchInput.value : '').toLowerCase().trim();
+        const selectedPrio = prioritySelect ? prioritySelect.value : '';
+        const selectedStat = statusSelect ? statusSelect.value : '';
+
+        const allCards = document.querySelectorAll('.task-item-card, .task-item-row, .kanban-card');
+        let visibleCount = 0;
+
+        allCards.forEach(el => {
+            const title = el.getAttribute('data-task-title') || '';
+            const desc = el.getAttribute('data-task-desc') || '';
+            const prio = el.getAttribute('data-task-priority') || '';
+            const cat = el.getAttribute('data-task-category') || '';
+            const stat = el.getAttribute('data-task-status') || '';
+
+            const matchesSearch = !query || title.includes(query) || desc.includes(query);
+            const matchesPrio = !selectedPrio || prio === selectedPrio;
+            const matchesCat = !activeCategory || cat === activeCategory;
+            const matchesStat = !selectedStat || stat === selectedStat;
+
+            const isMatch = matchesSearch && matchesPrio && matchesCat && matchesStat;
+            el.classList.toggle('d-none', !isMatch);
+            if (isMatch && el.classList.contains('task-item-card')) visibleCount++;
+        });
+
+        const alertBox = document.getElementById('noSearchMatchAlert');
+        if (alertBox) {
+            alertBox.classList.toggle('d-none', visibleCount > 0 || (allCards.length === 0));
+        }
+    }
+
+    // 3. 1-Click Status Checkboxes
+    document.querySelectorAll('.task-status-checkbox').forEach(chk => {
+        chk.addEventListener('change', async function () {
+            const taskId = this.getAttribute('data-task-id');
+            const targetStatus = this.checked ? 2 : 0;
+
+            try {
+                const response = await fetch(`/UserTasks/ToggleStatus/${taskId}?targetStatus=${targetStatus}`, {
+                    method: 'POST',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+                if (response.ok) {
+                    location.reload();
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        });
+    });
+
+    // 4. Kanban Move Buttons
+    document.querySelectorAll('.btn-move-status').forEach(btn => {
+        btn.addEventListener('click', async function () {
+            const taskId = this.getAttribute('data-task-id');
+            const targetStatus = this.getAttribute('data-target-status');
+
+            try {
+                const response = await fetch(`/UserTasks/ToggleStatus/${taskId}?targetStatus=${targetStatus}`, {
+                    method: 'POST',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+                if (response.ok) {
+                    location.reload();
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        });
+    });
+
+    // 5. HTML5 Kanban Drag & Drop
+    let draggedCard = null;
+
+    document.querySelectorAll('.kanban-card').forEach(card => {
+        card.addEventListener('dragstart', function () {
+            draggedCard = this;
+            this.classList.add('dragging');
+        });
+
+        card.addEventListener('dragend', function () {
+            this.classList.remove('dragging');
+            draggedCard = null;
+        });
+    });
+
+    document.querySelectorAll('.kanban-column-body').forEach(col => {
+        col.addEventListener('dragover', function (e) {
+            e.preventDefault();
+            this.classList.add('dragover');
+        });
+
+        col.addEventListener('dragleave', function () {
+            this.classList.remove('dragover');
+        });
+
+        col.addEventListener('drop', async function (e) {
+            e.preventDefault();
+            this.classList.remove('dragover');
+
+            if (!draggedCard) return;
+
+            const taskId = draggedCard.getAttribute('data-task-id');
+            const targetStatus = this.getAttribute('data-status-val');
+
+            this.appendChild(draggedCard);
+
+            try {
+                await fetch(`/UserTasks/ToggleStatus/${taskId}?targetStatus=${targetStatus}`, {
+                    method: 'POST',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+                location.reload();
+            } catch (err) {
+                console.error(err);
+            }
+        });
+    });
+});
+</script>
 }

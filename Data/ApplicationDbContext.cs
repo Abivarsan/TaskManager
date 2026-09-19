@@ -1,4 +1,4 @@
-﻿// Data/ApplicationDbContext.cs
+// Data/ApplicationDbContext.cs
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using TaskManager.Models;
@@ -13,6 +13,7 @@ namespace TaskManager.Data
         }
 
         public DbSet<UserTask> UserTasks { get; set; }
+        public DbSet<SubTask> SubTasks { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {

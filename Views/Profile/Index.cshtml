@@ -1,0 +1,137 @@
+@model TaskManager.Controllers.ProfileController.ProfileViewModel
+
+@{
+    ViewData["Title"] = "My Profile";
+    var changePasswordModel = (TaskManager.Controllers.ProfileController.ChangePasswordViewModel)(ViewBag.ChangePasswordModel ?? new TaskManager.Controllers.ProfileController.ChangePasswordViewModel());
+}
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show rounded-3 mb-4 animate-fade-in-up" role="alert">
+        <i class="bi bi-check-circle-fill me-2 text-success"></i> @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show rounded-3 mb-4 animate-fade-in-up" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2 text-danger"></i> @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<div class="row g-4 justify-content-center animate-fade-in-up">
+    <!-- Left Column: User Card & Stats -->
+    <div class="col-lg-4 col-md-5">
+        <div class="glass-card text-center p-4">
+            <div class="user-avatar mx-auto mb-3" style="width: 76px; height: 76px; font-size: 2rem;">
+                @(string.IsNullOrWhiteSpace(Model.DisplayName) ? Model.Email.Substring(0, 1).ToUpper() : Model.DisplayName.Substring(0, 1).ToUpper())
+            </div>
+            <h3 class="h5 fw-bold mb-1">
+                @(string.IsNullOrWhiteSpace(Model.DisplayName) ? "TaskManager User" : Model.DisplayName)
+            </h3>
+            <p class="text-muted small mb-3">@Model.Email</p>
+
+            <div class="row g-2 pt-3 border-top" style="border-color: var(--border-color) !important;">
+                <div class="col-6">
+                    <div class="p-2 rounded-3" style="background: var(--bg-surface-hover);">
+                        <div class="fs-4 fw-bold text-primary">@Model.TotalTasks</div>
+                        <div class="small text-muted" style="font-size: 11px;">Created Tasks</div>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="p-2 rounded-3" style="background: var(--bg-surface-hover);">
+                        <div class="fs-4 fw-bold text-success">@Model.CompletedTasks</div>
+                        <div class="small text-muted" style="font-size: 11px;">Completed</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column: Settings & Password Forms -->
+    <div class="col-lg-7 col-md-7">
+        <!-- 1. Profile Customization Form -->
+        <div class="glass-card mb-4">
+            <div class="card-header-gradient py-3 px-4">
+                <h4 class="h5 fw-bold mb-0">
+                    <i class="bi bi-person-gear text-primary me-2"></i> Profile Customization
+                </h4>
+            </div>
+            <div class="p-4">
+                <form asp-action="UpdateProfile" method="post">
+                    @Html.AntiForgeryToken()
+
+                    <div class="form-floating-modern mb-3">
+                        <label class="form-label" for="Email">Registered Email</label>
+                        <input type="text" class="form-control form-control-modern" value="@Model.Email" readonly disabled style="opacity: 0.7;" />
+                        <span class="text-muted small">Your email address is managed via your account security credentials.</span>
+                    </div>
+
+                    <div class="form-floating-modern mb-3">
+                        <label asp-for="DisplayName" class="form-label">
+                            <i class="bi bi-person text-primary"></i> Custom Display Name
+                        </label>
+                        <input asp-for="DisplayName" class="form-control form-control-modern" placeholder="e.g. Abivarsan K." />
+                        <span asp-validation-for="DisplayName" class="text-danger small mt-1 d-block"></span>
+                    </div>
+
+                    <div class="form-floating-modern mb-4">
+                        <label asp-for="AvatarColor" class="form-label">
+                            <i class="bi bi-palette text-info"></i> Avatar Accent Theme
+                        </label>
+                        <select asp-for="AvatarColor" class="form-select form-control-modern">
+                            <option value="primary">Primary (Indigo & Purple Gradient)</option>
+                            <option value="accent">Accent (Cyan & Electric Blue)</option>
+                            <option value="success">Success (Emerald Green)</option>
+                            <option value="warning">Warm (Sunset Amber & Orange)</option>
+                            <option value="danger">Crimson (Rose & Red)</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn btn-gradient-primary btn-shimmer">
+                        <i class="bi bi-check2-circle me-1"></i> Save Profile Details
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- 2. Change Password Form -->
+        <div class="glass-card">
+            <div class="card-header-gradient py-3 px-4">
+                <h4 class="h5 fw-bold mb-0">
+                    <i class="bi bi-shield-lock text-warning me-2"></i> Change Password
+                </h4>
+            </div>
+            <div class="p-4">
+                <form asp-action="ChangePassword" method="post">
+                    @Html.AntiForgeryToken()
+
+                    <div class="form-floating-modern mb-3">
+                        <label class="form-label">Current Password</label>
+                        <input type="password" name="CurrentPassword" class="form-control form-control-modern" placeholder="Enter current password" required />
+                    </div>
+
+                    <div class="form-floating-modern mb-3">
+                        <label class="form-label">New Password</label>
+                        <input type="password" name="NewPassword" class="form-control form-control-modern" placeholder="Enter new password" required />
+                    </div>
+
+                    <div class="form-floating-modern mb-4">
+                        <label class="form-label">Confirm New Password</label>
+                        <input type="password" name="ConfirmPassword" class="form-control form-control-modern" placeholder="Re-type new password" required />
+                    </div>
+
+                    <button type="submit" class="btn btn-modern-secondary">
+                        <i class="bi bi-key me-1"></i> Update Password
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+}

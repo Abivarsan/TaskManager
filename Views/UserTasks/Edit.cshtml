@@ -1,38 +1,284 @@
-﻿<!-- Views/UserTasks/Edit.cshtml -->
 @model TaskManager.Models.UserTask
 
 @{
     ViewData["Title"] = "Edit Task";
+    var subtasks = Model.SubTasks?.ToList() ?? new List<TaskManager.Models.SubTask>();
+    var totalSub = subtasks.Count;
+    var completedSub = subtasks.Count(s => s.IsCompleted);
+    var subPercent = totalSub > 0 ? (int)Math.Round((double)completedSub / totalSub * 100) : 0;
 }
 
-<h1>Edit Task</h1>
+<div class="row justify-content-center animate-fade-in-up">
+    <div class="col-lg-8 col-md-10">
+        <div class="glass-card shadow-lg">
+            <!-- Header with Gradient Accent -->
+            <div class="card-header-gradient py-4">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <span class="badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill px-2.5 py-0.5 small">
+                        <i class="bi bi-pencil-square"></i> Edit Mode
+                    </span>
+                    <span class="text-muted small">
+                        <i class="bi bi-hash"></i> ID: @Model.UserTaskId
+                    </span>
+                </div>
+                <h2 class="fw-bold mb-1 fs-3">Edit Task</h2>
+                <p class="text-muted small mb-0">Modify task settings, priorities, deadlines, and manage subtasks.</p>
+            </div>
 
-<hr />
+            <!-- Form Body -->
+            <div class="p-4 p-md-5">
+                <form asp-action="Edit" method="post">
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger rounded-3 small mb-4" role="alert"></div>
+                    <input type="hidden" asp-for="UserTaskId" id="currentTaskId" />
 
-<div class="row justify-content-center">
-    <div class="col-md-8 col-lg-6">
-        <form asp-action="Edit">
-            <input type="hidden" asp-for="UserTaskId" />
-            <div class="mb-3">
-                <label asp-for="Title" class="form-label"></label>
-                <input asp-for="Title" class="form-control" />
-                <span asp-validation-for="Title" class="text-danger"></span>
+                    <!-- Task Title -->
+                    <div class="form-floating-modern mb-3">
+                        <label asp-for="Title" class="form-label">
+                            <i class="bi bi-fonts text-primary"></i> Task Title <span class="text-danger">*</span>
+                        </label>
+                        <input asp-for="Title" class="form-control form-control-modern" placeholder="e.g. Prepare quarterly presentation deck..." />
+                        <span asp-validation-for="Title" class="text-danger small mt-1 d-block"></span>
+                    </div>
+
+                    <!-- Task Description -->
+                    <div class="form-floating-modern mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label asp-for="Description" class="form-label mb-0">
+                                <i class="bi bi-card-text text-primary"></i> Description <span class="text-muted small fw-normal">(Optional)</span>
+                            </label>
+                            <span id="descCharCounter" class="text-muted small">0 / 500 characters</span>
+                        </div>
+                        <textarea asp-for="Description" id="taskDescriptionInput" class="form-control form-control-modern" rows="3" maxlength="500"></textarea>
+                        <span asp-validation-for="Description" class="text-danger small mt-1 d-block"></span>
+                    </div>
+
+                    <!-- Priority & Category Row -->
+                    <div class="row g-3 mb-3">
+                        <div class="col-sm-6">
+                            <div class="form-floating-modern mb-0">
+                                <label asp-for="Priority" class="form-label">
+                                    <i class="bi bi-flag-fill text-warning"></i> Priority Level
+                                </label>
+                                <select asp-for="Priority" class="form-select form-control-modern" asp-items="Html.GetEnumSelectList<TaskManager.Models.TaskPriority>()">
+                                </select>
+                                <span asp-validation-for="Priority" class="text-danger small mt-1 d-block"></span>
+                            </div>
+                        </div>
+
+                        <div class="col-sm-6">
+                            <div class="form-floating-modern mb-0">
+                                <label asp-for="Category" class="form-label">
+                                    <i class="bi bi-tags-fill text-info"></i> Category
+                                </label>
+                                <select asp-for="Category" class="form-select form-control-modern" asp-items="Html.GetEnumSelectList<TaskManager.Models.TaskCategory>()">
+                                </select>
+                                <span asp-validation-for="Category" class="text-danger small mt-1 d-block"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Status & Due Date Row -->
+                    <div class="row g-3 mb-4">
+                        <div class="col-sm-6">
+                            <div class="form-floating-modern mb-0">
+                                <label asp-for="Status" class="form-label">
+                                    <i class="bi bi-clock-history text-primary"></i> Status
+                                </label>
+                                <select asp-for="Status" class="form-select form-control-modern" asp-items="Html.GetEnumSelectList<TaskManager.Models.TaskStatus>()">
+                                </select>
+                                <span asp-validation-for="Status" class="text-danger small mt-1 d-block"></span>
+                            </div>
+                        </div>
+
+                        <div class="col-sm-6">
+                            <div class="form-floating-modern mb-0">
+                                <label asp-for="DueDate" class="form-label">
+                                    <i class="bi bi-calendar-event text-danger"></i> Due Date (Deadline)
+                                </label>
+                                <input asp-for="DueDate" type="date" class="form-control form-control-modern" />
+                                <span asp-validation-for="DueDate" class="text-danger small mt-1 d-block"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Submit Task Updates -->
+                    <div class="d-flex flex-column flex-sm-row justify-content-between gap-3 pt-2 mb-4 border-top" style="border-color: var(--border-color) !important;">
+                        <a asp-action="Index" class="btn btn-modern-secondary order-2 order-sm-1">
+                            <i class="bi bi-arrow-left"></i> Back to Tasks
+                        </a>
+                        <button type="submit" class="btn btn-gradient-primary btn-shimmer order-1 order-sm-2">
+                            <i class="bi bi-check2-circle"></i> Save Task Changes
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Feature 6: Interactive Subtasks / Checklist Manager -->
+                <div class="mt-4 pt-4 border-top" style="border-color: var(--border-color) !important;">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h4 class="h5 fw-bold mb-0">
+                            <i class="bi bi-list-check text-primary me-1"></i> Subtasks & Checklist
+                        </h4>
+                        <span id="subtaskCounterBadge" class="badge bg-secondary-subtle text-muted rounded-pill px-2.5 py-1">
+                            @completedSub of @totalSub completed (@subPercent%)
+                        </span>
+                    </div>
+
+                    <!-- Progress Bar -->
+                    <div class="subtask-progress-wrapper mb-3">
+                        <div id="subtaskProgressBar" class="subtask-progress-bar" style="width: @subPercent%;"></div>
+                    </div>
+
+                    <!-- Add Subtask Input Form -->
+                    <div class="input-group mb-3">
+                        <input type="text" id="newSubtaskTitle" class="form-control form-control-modern" placeholder="Add a checklist step (e.g. Gather receipts, write intro...)" />
+                        <button type="button" id="btnAddSubtask" class="btn btn-gradient-primary">
+                            <i class="bi bi-plus-lg"></i> Add Step
+                        </button>
+                    </div>
+
+                    <!-- Subtask Item List -->
+                    <div id="subtaskListContainer" class="subtask-list">
+                        @if (!subtasks.Any())
+                        {
+                            <div id="noSubtasksNotice" class="text-muted small py-3 text-center">
+                                No checklist items added yet. Break this task into steps using the box above!
+                            </div>
+                        }
+                        @foreach (var sub in subtasks)
+                        {
+                            <div class="subtask-item @(sub.IsCompleted ? "is-done" : "")" id="subtask-row-@sub.SubTaskId">
+                                <div class="d-flex align-items-center gap-2">
+                                    <input type="checkbox" class="task-status-checkbox subtask-check"
+                                           data-subtask-id="@sub.SubTaskId"
+                                           @(sub.IsCompleted ? "checked" : "") />
+                                    <span class="subtask-label small fw-semibold text-main">@sub.Title</span>
+                                </div>
+                                <button type="button" class="btn btn-action-icon delete-icon btn-sm btn-delete-subtask"
+                                        data-subtask-id="@sub.SubTaskId" title="Delete step">
+                                    <i class="bi bi-trash3"></i>
+                                </button>
+                            </div>
+                        }
+                    </div>
+                </div>
             </div>
-            <div class="mb-3">
-                <label asp-for="Description" class="form-label"></label>
-                <textarea asp-for="Description" class="form-control" rows="4"></textarea>
-                <span asp-validation-for="Description" class="text-danger"></span>
-            </div>
-            <div class="d-flex justify-content-between">
-                <a asp-action="Index" class="btn btn-secondary">Back to List</a>
-                <button type="submit" class="btn btn-primary">Save Changes</button>
-            </div>
-        </form>
+        </div>
     </div>
 </div>
 
 @section Scripts {
-    @{
-        await Html.RenderPartialAsync("_ValidationScriptsPartial");
-    }
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const taskId = document.getElementById('currentTaskId').value;
+            const newSubtaskInput = document.getElementById('newSubtaskTitle');
+            const btnAddSubtask = document.getElementById('btnAddSubtask');
+            const subtaskContainer = document.getElementById('subtaskListContainer');
+            const counterBadge = document.getElementById('subtaskCounterBadge');
+            const progressBar = document.getElementById('subtaskProgressBar');
+
+            function updateProgress() {
+                const all = document.querySelectorAll('.subtask-item');
+                const checked = document.querySelectorAll('.subtask-check:checked');
+                const total = all.length;
+                const done = checked.length;
+                const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+
+                if (counterBadge) counterBadge.textContent = `${done} of ${total} completed (${pct}%)`;
+                if (progressBar) progressBar.style.width = `${pct}%`;
+            }
+
+            // 1. Add Subtask
+            if (btnAddSubtask && newSubtaskInput) {
+                async function handleAdd() {
+                    const title = newSubtaskInput.value.trim();
+                    if (!title) return;
+
+                    try {
+                        const response = await fetch(`/UserTasks/AddSubTask?userTaskId=${taskId}&title=${encodeURIComponent(title)}`, {
+                            method: 'POST',
+                            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                        });
+                        const data = await response.json();
+                        if (data.success) {
+                            newSubtaskInput.value = '';
+                            const notice = document.getElementById('noSubtasksNotice');
+                            if (notice) notice.remove();
+
+                            const div = document.createElement('div');
+                            div.className = 'subtask-item';
+                            div.id = `subtask-row-${data.subTaskId}`;
+                            div.innerHTML = `
+                                <div class="d-flex align-items-center gap-2">
+                                    <input type="checkbox" class="task-status-checkbox subtask-check" data-subtask-id="${data.subTaskId}" />
+                                    <span class="subtask-label small fw-semibold text-main">${data.title}</span>
+                                </div>
+                                <button type="button" class="btn btn-action-icon delete-icon btn-sm btn-delete-subtask" data-subtask-id="${data.subTaskId}" title="Delete step">
+                                    <i class="bi bi-trash3"></i>
+                                </button>
+                            `;
+                            subtaskContainer.appendChild(div);
+                            bindEvents(div);
+                            updateProgress();
+                        }
+                    } catch (err) {
+                        console.error(err);
+                    }
+                }
+
+                btnAddSubtask.addEventListener('click', handleAdd);
+                newSubtaskInput.addEventListener('keypress', function (e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleAdd();
+                    }
+                });
+            }
+
+            // 2. Bind Toggle and Delete events
+            function bindEvents(scope) {
+                scope.querySelectorAll('.subtask-check').forEach(chk => {
+                    chk.addEventListener('change', async function () {
+                        const subId = this.getAttribute('data-subtask-id');
+                        const row = document.getElementById(`subtask-row-${subId}`);
+                        try {
+                            const res = await fetch(`/UserTasks/ToggleSubTask/${subId}`, {
+                                method: 'POST',
+                                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                            });
+                            const data = await res.json();
+                            if (data.success) {
+                                if (row) row.classList.toggle('is-done', data.isCompleted);
+                                updateProgress();
+                            }
+                        } catch (err) {
+                            console.error(err);
+                        }
+                    });
+                });
+
+                scope.querySelectorAll('.btn-delete-subtask').forEach(btn => {
+                    btn.addEventListener('click', async function () {
+                        const subId = this.getAttribute('data-subtask-id');
+                        const row = document.getElementById(`subtask-row-${subId}`);
+                        try {
+                            const res = await fetch(`/UserTasks/DeleteSubTask/${subId}`, {
+                                method: 'POST',
+                                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                            });
+                            const data = await res.json();
+                            if (data.success && row) {
+                                row.remove();
+                                updateProgress();
+                            }
+                        } catch (err) {
+                            console.error(err);
+                        }
+                    });
+                });
+            }
+
+            bindEvents(document);
+        });
+    </script>
 }

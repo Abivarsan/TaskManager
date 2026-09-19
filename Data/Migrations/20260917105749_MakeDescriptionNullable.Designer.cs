@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TaskManager.Data;
 
@@ -11,9 +12,11 @@ using TaskManager.Data;
 namespace TaskManager.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260917105749_MakeDescriptionNullable")]
+    partial class MakeDescriptionNullable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -167,17 +170,9 @@ namespace TaskManager.Data.Migrations
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("int");
 
-                    b.Property<string>("AvatarColor")
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("DisplayName")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("Email")
                         .HasMaxLength(256)
@@ -232,35 +227,6 @@ namespace TaskManager.Data.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
-            modelBuilder.Entity("TaskManager.Models.SubTask", b =>
-                {
-                    b.Property<int>("SubTaskId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("SubTaskId"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsCompleted")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<int>("UserTaskId")
-                        .HasColumnType("int");
-
-                    b.HasKey("SubTaskId");
-
-                    b.HasIndex("UserTaskId");
-
-                    b.ToTable("SubTasks");
-                });
-
             modelBuilder.Entity("TaskManager.Models.UserTask", b =>
                 {
                     b.Property<int>("UserTaskId")
@@ -269,27 +235,9 @@ namespace TaskManager.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("UserTaskId"));
 
-                    b.Property<int>("Category")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("CompletedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
                     b.Property<string>("Description")
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
-
-                    b.Property<DateTime?>("DueDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("Priority")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -358,17 +306,6 @@ namespace TaskManager.Data.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("TaskManager.Models.SubTask", b =>
-                {
-                    b.HasOne("TaskManager.Models.UserTask", "UserTask")
-                        .WithMany("SubTasks")
-                        .HasForeignKey("UserTaskId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("UserTask");
-                });
-
             modelBuilder.Entity("TaskManager.Models.UserTask", b =>
                 {
                     b.HasOne("TaskManager.Models.ApplicationUser", "ApplicationUser")
@@ -383,11 +320,6 @@ namespace TaskManager.Data.Migrations
             modelBuilder.Entity("TaskManager.Models.ApplicationUser", b =>
                 {
                     b.Navigation("UserTasks");
-                });
-
-            modelBuilder.Entity("TaskManager.Models.UserTask", b =>
-                {
-                    b.Navigation("SubTasks");
                 });
 #pragma warning restore 612, 618
         }

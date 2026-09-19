@@ -1,77 +1,139 @@
-﻿<!-- Views/Shared/_Layout.cshtml -->
+@inject Microsoft.AspNetCore.Identity.UserManager<TaskManager.Models.ApplicationUser> UserManager
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-bs-theme="dark">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - TaskManager</title>
+    
+    <!-- Google Fonts: Plus Jakarta Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
     <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"
-          integrity="sha384-9ndCyUa6m4Z1fGdAqfJN1vtEilOeLlO08HqdZ+DEfYjPO5hS9sRkUr1cA4gS5DF4" crossorigin="anonymous">
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="~/css/site.css" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    
+    <!-- Custom Modern UI Styles -->
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <div class="container-fluid">
-            <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">TaskManager</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
-                    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
+    <!-- Modern Sticky Navbar -->
+    <nav class="navbar navbar-expand-lg modern-navbar">
+        <div class="container">
+            <!-- Brand Logo -->
+            <a class="brand-logo-container" asp-area="" asp-controller="Home" asp-action="Index">
+                <div class="brand-icon-box">
+                    <i class="bi bi-check2-square"></i>
+                </div>
+                <span>Task<span class="brand-text-gradient">Manager</span></span>
+            </a>
+
+            <!-- Mobile Navbar Toggle -->
+            <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent"
+                    aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
+                <i class="bi bi-list fs-2 text-main"></i>
             </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                    @if (User.Identity.IsAuthenticated)
+
+            <!-- Navigation Links -->
+            <div class="collapse navbar-collapse" id="navbarContent">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-4">
+                    <li class="nav-item">
+                        <a class="nav-link-modern" asp-area="" asp-controller="Home" asp-action="Index">
+                            <i class="bi bi-house-door"></i> Home
+                        </a>
+                    </li>
+                    @if (User.Identity?.IsAuthenticated == true)
                     {
                         <li class="nav-item">
-                            <a class="nav-link" asp-controller="UserTasks" asp-action="Index">My Tasks</a>
+                            <a class="nav-link-modern" asp-area="" asp-controller="UserTasks" asp-action="Index">
+                                <i class="bi bi-kanban"></i> My Tasks
+                            </a>
                         </li>
                     }
                 </ul>
-                <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
-                    @if (User.Identity.IsAuthenticated)
+
+                <!-- Right-aligned Items -->
+                <div class="d-flex align-items-center gap-2 mt-2 mt-lg-0">
+                    <!-- Theme Mode Toggle -->
+                    <button type="button" class="btn-theme-toggle" id="themeToggleBtn" aria-label="Toggle light or dark theme" title="Toggle theme">
+                        <i class="bi bi-sun-fill text-warning"></i>
+                    </button>
+
+                    @if (User.Identity?.IsAuthenticated == true)
                     {
-                        <li class="nav-item">
-                            <a class="nav-link disabled">Hello, @User.Identity.Name!</a>
-                        </li>
-                        <li class="nav-item">
-                            <form id="logoutForm" asp-area="" asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
-                                <button type="submit" class="nav-link btn btn-link text-white">Logout</button>
-                            </form>
-                        </li>
+                        var currentUser = await UserManager.GetUserAsync(User);
+                        var displayName = !string.IsNullOrWhiteSpace(currentUser?.DisplayName) ? currentUser.DisplayName : (User.Identity.Name ?? "User");
+                        var initial = displayName.Length > 0 ? displayName.Substring(0, 1).ToUpper() : "U";
+
+                        <!-- Quick Add Task Shortcut -->
+                        <a asp-controller="UserTasks" asp-action="Create" class="btn btn-gradient-primary btn-sm d-none d-sm-inline-flex">
+                            <i class="bi bi-plus-lg"></i> New Task
+                        </a>
+
+                        <!-- User Profile Pill -->
+                        <a asp-controller="Profile" asp-action="Index" class="user-profile-badge text-decoration-none" title="Manage Profile & Settings">
+                            <div class="user-avatar">
+                                @initial
+                            </div>
+                            <span class="d-none d-md-inline">@displayName</span>
+                        </a>
+
+                        <!-- Logout Button -->
+                        <form asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })" method="post" class="d-inline m-0">
+                            <button type="submit" class="btn-action-icon delete-icon" title="Log out">
+                                <i class="bi bi-box-arrow-right"></i>
+                            </button>
+                        </form>
                     }
                     else
                     {
-                        <li class="nav-item">
-                            <a class="nav-link" asp-area="Identity" asp-page="/Account/Login">Login</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" asp-area="Identity" asp-page="/Account/Register">Register</a>
-                        </li>
+                        <a class="nav-link-modern" asp-area="Identity" asp-page="/Account/Login">
+                            <i class="bi bi-box-arrow-in-right"></i> Sign In
+                        </a>
+                        <a class="btn btn-gradient-primary btn-sm btn-shimmer" asp-area="Identity" asp-page="/Account/Register">
+                            <i class="bi bi-person-plus"></i> Get Started
+                        </a>
                     }
-                </ul>
+                </div>
             </div>
         </div>
     </nav>
 
-    <div class="container mt-4">
+    <!-- Main Content Area -->
+    <main class="container main-container" role="main">
         @RenderBody()
-    </div>
+    </main>
 
-    <footer class="footer bg-light text-center py-3 mt-4">
+    <!-- Modern Footer -->
+    <footer class="modern-footer">
         <div class="container">
-            <span class="text-muted">&copy; @DateTime.Now.Year - TaskManager</span>
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="fw-semibold brand-text-gradient">TaskManager</span>
+                    <span>&copy; @DateTime.Now.Year. All rights reserved.</span>
+                </div>
+                <div class="d-flex gap-4 text-muted small">
+                    <span><i class="bi bi-shield-check text-success"></i> Secure Storage</span>
+                    <span><i class="bi bi-lightning-charge text-warning"></i> Fast Performance</span>
+                    <span><i class="bi bi-moon-stars text-primary"></i> Dark/Light Mode</span>
+                </div>
+            </div>
         </div>
     </footer>
 
-    <!-- Bootstrap JS Bundle -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
-            integrity="sha384-ENjdO4Dr2bkBIFxQpeo5UHURO2Xj2cV6O2ZxAciIO0MxylN5gzlNv1yY+9yZ6zw/"
+    <!-- Bootstrap Bundle JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
             crossorigin="anonymous"></script>
-    <!-- jQuery (Optional, if needed for other scripts) -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"
-            integrity="sha256-/xUj+3OJmX1ge6ztbtdktjoXD1VtVgqXxQVqa0RNeFk="
-            crossorigin="anonymous"></script>
+    
+    <!-- Custom UI Enhancements -->
+    <script src="~/js/site.js" asp-append-version="true"></script>
+
     @RenderSection("Scripts", required: false)
 </body>
 </html>

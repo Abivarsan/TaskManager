@@ -1,26 +1,143 @@
-﻿<!-- Views/UserTasks/Details.cshtml -->
 @model TaskManager.Models.UserTask
 
 @{
     ViewData["Title"] = "Task Details";
+    var isDone = Model.Status == TaskManager.Models.TaskStatus.Completed;
+    var isOverdue = Model.DueDate.HasValue && Model.DueDate.Value.Date < DateTime.Today && !isDone;
+    var isDueToday = Model.DueDate.HasValue && Model.DueDate.Value.Date == DateTime.Today && !isDone;
+    var subtasks = Model.SubTasks?.OrderBy(s => s.CreatedAt).ToList() ?? new List<TaskManager.Models.SubTask>();
+    var totalSub = subtasks.Count;
+    var doneSub = subtasks.Count(s => s.IsCompleted);
+    var subPct = totalSub > 0 ? (int)Math.Round((double)doneSub / totalSub * 100) : 0;
 }
 
-<h1>Task Details</h1>
+<div class="row justify-content-center animate-fade-in-up">
+    <div class="col-lg-7 col-md-9">
+        <div class="glass-card shadow-lg">
+            <!-- Header with Gradient Accent -->
+            <div class="card-header-gradient py-4">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge-prio badge-prio-@Model.Priority.ToString().ToLower()">
+                            @if (Model.Priority == TaskManager.Models.TaskPriority.Urgent)
+                            {
+                                <i class="bi bi-fire"></i>
+                            }
+                            @Model.Priority Priority
+                        </span>
+                        <span class="badge-cat badge-cat-@Model.Category.ToString().ToLower()">
+                            @Model.Category
+                        </span>
+                    </div>
+                    <span class="text-muted small">
+                        <i class="bi bi-hash"></i> ID: @Model.UserTaskId
+                    </span>
+                </div>
+                <h2 class="fw-bold mt-2 mb-1 fs-3 @(isDone ? "text-decoration-line-through text-muted" : "")">
+                    @Model.Title
+                </h2>
+                <div class="d-flex align-items-center gap-2 mt-2">
+                    <span class="badge @(isDone ? "bg-success-subtle text-success" : (Model.Status == TaskManager.Models.TaskStatus.InProgress ? "bg-info-subtle text-info" : "bg-secondary-subtle text-muted")) rounded-pill px-3 py-1">
+                        <i class="bi bi-dot"></i> @Model.Status
+                    </span>
+                    @if (Model.DueDate.HasValue)
+                    {
+                        <span class="badge-date @(isOverdue ? "badge-date-overdue" : (isDueToday ? "badge-date-today" : "badge-date-normal"))">
+                            <i class="bi bi-calendar3"></i>
+                            @if (isOverdue)
+                            {
+                                <span>Overdue (@Model.DueDate.Value.ToString("MMM dd, yyyy"))</span>
+                            }
+                            else if (isDueToday)
+                            {
+                                <span>Due Today</span>
+                            }
+                            else
+                            {
+                                <span>Due: @Model.DueDate.Value.ToString("MMM dd, yyyy")</span>
+                            }
+                        </span>
+                    }
+                </div>
+            </div>
 
-<hr />
+            <!-- Details Body -->
+            <div class="p-4 p-md-5">
+                <!-- Description -->
+                <div class="mb-4">
+                    <label class="text-muted small fw-semibold text-uppercase" style="letter-spacing: 0.05em;">
+                        Description
+                    </label>
+                    <div class="p-3 mt-2 rounded-3" style="background: var(--bg-surface-hover); border: 1px solid var(--border-color); min-height: 80px; white-space: pre-wrap; line-height: 1.6;">
+                        @(string.IsNullOrWhiteSpace(Model.Description) ? "No detailed description provided for this task." : Model.Description)
+                    </div>
+                </div>
 
-<div class="row justify-content-center">
-    <div class="col-md-8 col-lg-6">
-        <dl class="row">
-            <dt class="col-sm-3">Title</dt>
-            <dd class="col-sm-9">@Html.DisplayFor(model => model.Title)</dd>
+                <!-- Subtasks Checklist in Details -->
+                @if (totalSub > 0)
+                {
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label class="text-muted small fw-semibold text-uppercase" style="letter-spacing: 0.05em;">
+                                Checklist Steps (@doneSub/@totalSub completed)
+                            </label>
+                            <span class="small text-muted fw-bold">@subPct%</span>
+                        </div>
+                        <div class="subtask-progress-wrapper mb-3">
+                            <div class="subtask-progress-bar" style="width: @subPct%;"></div>
+                        </div>
 
-            <dt class="col-sm-3">Description</dt>
-            <dd class="col-sm-9">@Html.DisplayFor(model => model.Description)</dd>
-        </dl>
-        <div class="d-flex justify-content-between">
-            <a asp-action="Edit" asp-route-id="@Model.UserTaskId" class="btn btn-warning">Edit</a>
-            <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+                        <div class="subtask-list">
+                            @foreach (var sub in subtasks)
+                            {
+                                <div class="subtask-item @(sub.IsCompleted ? "is-done" : "")">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <i class="bi @(sub.IsCompleted ? "bi-check-circle-fill text-success" : "bi-circle text-muted")"></i>
+                                        <span class="subtask-label small fw-semibold text-main">@sub.Title</span>
+                                    </div>
+                                    <span class="small text-muted">@sub.CreatedAt.ToString("MMM dd")</span>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+
+                <!-- Timestamps Metadata -->
+                <div class="row g-3 py-3 my-2 border-top border-bottom" style="border-color: var(--border-color) !important;">
+                    <div class="col-6">
+                        <span class="text-muted small d-block">Created On</span>
+                        <span class="fw-semibold small"><i class="bi bi-clock me-1 text-primary"></i> @Model.CreatedAt.ToString("MMM dd, yyyy hh:mm tt")</span>
+                    </div>
+                    <div class="col-6">
+                        <span class="text-muted small d-block">Completed On</span>
+                        <span class="fw-semibold small">
+                            @if (Model.CompletedAt.HasValue)
+                            {
+                                <span class="text-success"><i class="bi bi-check2-all me-1"></i> @Model.CompletedAt.Value.ToString("MMM dd, yyyy hh:mm tt")</span>
+                            }
+                            else
+                            {
+                                <span class="text-muted">— In Progress</span>
+                            }
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Action Toolbar -->
+                <div class="d-flex flex-column flex-sm-row justify-content-between gap-3 pt-3">
+                    <a asp-action="Index" class="btn btn-modern-secondary">
+                        <i class="bi bi-arrow-left"></i> Back to Tasks
+                    </a>
+                    <div class="d-flex gap-2">
+                        <a asp-action="Delete" asp-route-id="@Model.UserTaskId" class="btn btn-modern-danger">
+                            <i class="bi bi-trash3"></i> Delete
+                        </a>
+                        <a asp-action="Edit" asp-route-id="@Model.UserTaskId" class="btn btn-gradient-primary btn-shimmer">
+                            <i class="bi bi-pencil-square"></i> Edit Task
+                        </a>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
